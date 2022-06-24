@@ -1,0 +1,11 @@
+/.env
+/.stlit
+/.test
+/.tfflow
+/dataset
+/logo.jpg
+/model
+/testapp01.py
+/testapp03.py
+/testapp04.py
+/人事データ(全特徴量).csv
