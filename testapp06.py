@@ -196,7 +196,15 @@ def main():
 
                 # テーブルの表示
                 st_display_table(df.head(int(cnt)))
+        
+        elif 'df' in st.session_state: 
+            df = copy.deepcopy(st.session_state.df)
+            
+            cnt = st.sidebar.slider('表示する件数', 1, len(df), 10)
 
+            st_display_table(df.head(int(cnt)))
+
+        
         else:
             st.subheader('訓練用データをアップロードしてください')
 
@@ -253,15 +261,29 @@ def main():
 
 
     if choice == 'グラフ表示':
+        
 
         # セッションステートにデータフレームがあるかを確認
         if 'df' in st.session_state:
-
+            
             # セッションステートに退避していたデータフレームを復元
             df = copy.deepcopy(st.session_state.df)
+            
+            df_graph =  copy.deepcopy(df)
+            
+            # df_graph = df_graph.loc[(df["月給(ドル)"] > 0) & (df["月給(ドル)"] < 2500) ,"月給(ドル)"] = 0
+            
+            # df_graph = pd.DataFrame(df[(df["月給(ドル)"] > 0) & (df["月給(ドル)"] < 2500 )]) 
+                        
+            print(df_graph)
+            
+                        
+            x_axis = st.sidebar.selectbox("グラフのX軸",(df.columns))
+
+        
 
             # グラフの表示
-            st_display_graph(df,"退職")
+            st_display_graph(df,x_axis)
 
             
             
@@ -275,23 +297,61 @@ def main():
 
             # セッションステートに退避していたデータフレームを復元
             df = copy.deepcopy(st.session_state.df)
-
-            # 説明変数と目的変数の設定
-            train_X = df.drop("退職", axis=1)   # 退職列以外を説明変数にセット
-            train_Y = df["退職"]                # 退職列を目的変数にセット
-
-            # 決定木による予測
-            clf, train_pred, train_scores = ml_dtree(train_X, train_Y, 2)
-
-            # 正解率を出力
-
-
-            # 決定木のツリーを出力
             
+            # 決定木の深さ
+            depth_num = st.sidebar.number_input("決定木の深さ(MAX=3)",min_value=1,max_value=3,value=2)
+            
+            
+            
+            # 説明変数と目的変数の設定
+            df_x = df.drop("退職", axis=1)   # 退職列以外を説明変数にセット
+            df_y = df["退職"]                # 退職列を目的変数にセット
+            
+            # データの分割
+            train_x, valid_x, train_y, valid_y = train_test_split(df_x, df_y, train_size=0.7, stratify=df_y)
+            
+            
+            # 決定木による予測
+            clf, train_pred, train_scores = ml_dtree(train_x, train_y, depth_num)
+            
+            # 訓練データー再現率の計算
+            recall_rate = recall_score(train_y, train_pred, pos_label="Yes")
+            
+            # 訓練データー適合率の計算
+            precision_rate = precision_score(train_y, train_pred, pos_label="Yes")
+        
+            # 決定木のツリーを出力
+            st_display_dtree(clf,df.columns[1:])
+            
+            
+            # 訓練データーの予測精度
+            accuracy,recall,precision = st.columns(3)
+            
+            with accuracy:
+                
+                st.header('Accuracy')
+                st.write(train_scores)
+                
+            with recall:
+                st.header('Recall')
+                st.write(recall_rate)
+                
+            with precision:
+                st.header('Precision')
+                st.write(precision_rate)
 
         else:
             st.subheader('訓練用データをアップロードしてください')
         
+            
+    if choice == "About":
+        image = Image.open('logo.jpg')
+        st.image(image)
+
+        st.markdown("Built by Qikilca")
+        st.text("Version 0.1")
+
+        st.markdown("For More Information check out   (https://github.com/Qikilca)")
 
 if __name__ == "__main__":
     main()
