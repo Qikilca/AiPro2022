@@ -3,6 +3,7 @@
 /.test
 /.test2
 /.tfflow
+/.venv
 /dataset
 /logo.jpg
 /model
